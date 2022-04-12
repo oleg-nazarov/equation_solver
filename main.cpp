@@ -1,30 +1,39 @@
-#include <condition_variable>
 #include <functional>
+#include <future>
 #include <iostream>
-#include <memory>
-#include <mutex>
-#include <queue>
 #include <thread>
-#include <tuple>
+#include <vector>
 
+#include "calculations.h"
 #include "equation.h"
 #include "input_output.h"
 
+// implementing Producer-Consumer Pattern, we're going to read equation coefficients in one thread,
+// calculate roots and extremum in multiple other threads, and print results in the last thread
+// without awaitining for the end of calculations
 int main(int argc, char** argv) {
     using namespace equation;
 
-    std::mutex m;
-    std::condition_variable cv;
-    bool input_is_empty = false;
-    equation::Queue q;
+    // we can print roots and extremum after we have read all the arguments
+    // but before have finished all calculations
 
-    std::thread t1(ReadAndPushCoefficients, argc, argv, std::ref(q), std::ref(input_is_empty),
-                   std::ref(cv), std::ref(m));
-    std::thread t2(CalculateRootsExtremumAndPrint, std::ref(std::cout), std::ref(q),
-                   std::cref(input_is_empty), std::ref(cv), std::ref(m));
+    // mutex restrains "push" and "pop" operations for Queue
+    Queue coefficients;
+    ThreadHelper thread_helper;
 
-    t1.join();
-    t2.join();
+    std::thread t_read(ReadTreyAndProduceCoefficients,
+                       argc, argv, std::ref(coefficients), std::ref(thread_helper));
+
+    std::vector<std::future<PrintResult>> print_results;
+    std::thread t_calculate(FindRootsAndExtremum,
+                            std::ref(print_results), std::ref(coefficients), std::ref(thread_helper));
+
+    std::thread t_print(PrintRootsAndExtremum,
+                        std::ref(std::cout), std::ref(print_results), std::ref(thread_helper));
+
+    t_read.join();
+    t_calculate.join();
+    t_print.join();
 
     return 0;
 }
