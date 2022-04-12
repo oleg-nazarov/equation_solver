@@ -12,7 +12,7 @@ namespace detail {
 struct ExtremumPrinter {
     std::string operator()(std::nullptr_t) {
         using namespace std::literals::string_literals;
-        return "no extremum"s;
+        return "no relative extreme"s;
     }
 
     std::string operator()(const std::vector<ExtremePoint>& extremum) {

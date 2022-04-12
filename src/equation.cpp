@@ -7,13 +7,10 @@
 #include <sstream>
 #include <string>
 #include <utility>
-#include <variant>
 
 namespace equation {
 
 namespace detail {
-
-const double EPSILON = 1e-6;
 
 struct RootsPrinter {
     std::string operator()(std::nullptr_t) {

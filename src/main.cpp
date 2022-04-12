@@ -8,11 +8,23 @@
 #include "equation.h"
 #include "input_output.h"
 
+void PrintUsage(std::ostream& out = std::cerr) {
+    using namespace std::literals::string_literals;
+
+    out << "Usage: equation_solver [integers], e.g.:\n"s;
+    out << "$ equation_solver 1 -2 -3 -3 4 5 0 4 -4 3 4 5 0 0 0 4 aaa 11\n"s;
+}
+
 // implementing Producer-Consumer Pattern, we're going to read equation coefficients in one thread,
 // calculate roots and extremum in multiple other threads, and print results in the last thread
 // without awaitining for the end of calculations
 int main(int argc, char** argv) {
     using namespace equation;
+
+    if (argc == 1) {
+        PrintUsage();
+        return 1;
+    }
 
     // we can print roots and extremum after we have read all the arguments
     // but before have finished all calculations

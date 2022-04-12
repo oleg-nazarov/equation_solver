@@ -1,5 +1,7 @@
 #include "calculations.h"
 
+#include <iterator>
+
 namespace equation {
 
 namespace detail {
@@ -19,15 +21,33 @@ void CheckCoeffsForGarbage(const std::string& a, const std::string& b, const std
     }
 }
 
+std::vector<int> GetTreyCoefficients(const std::shared_ptr<OneVariableEquation>& equation_ptr) {
+    if (dynamic_cast<Linear*>(equation_ptr.get())) {
+        std::vector<int> new_coeffs{0};
+
+        std::vector<int> coeffs = equation_ptr->GetCoefficients();
+        new_coeffs.insert(new_coeffs.end(), std::move_iterator(coeffs.begin()), std::move_iterator(coeffs.end()));
+
+        return new_coeffs;
+    }
+
+    return equation_ptr->GetCoefficients();
+}
+
 void CalculateAndWriteRootsAndExtremum(std::promise<PrintResult> result_promise,
                                        std::shared_ptr<OneVariableEquation> equation_ptr,
                                        std::shared_ptr<ExtremumSolver> extremum_ptr) {
     EquationResult equation_res;
 
     // 1. add coefficients
-    equation_res.coeffs = equation_ptr->GetCoefficients();
+
+    // as we get equation coefficients as treys, we want to print them as treys too,
+    // even if it is a linear equation ("0 4 -4")
+    equation_res.coeffs = GetTreyCoefficients(equation_ptr);
+
     // 2. calculating roots
     equation_res.roots = equation_ptr->GetRoots();
+
     // 3. finding extremum
     equation_res.extremum = extremum_ptr->GetExtremum();
 
