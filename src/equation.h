@@ -45,7 +45,6 @@ class Quadratic : public OneVariableEquation {
     void Solve() override;
 };
 
-// definitions
 template <typename... Args>
 OneVariableEquation::OneVariableEquation(Args... args) : coefficients_{args...} {}
 

@@ -14,7 +14,8 @@ namespace detail {
 
 struct RootsPrinter {
     std::string operator()(std::nullptr_t) {
-        return "no roots";
+        using namespace std::literals::string_literals;
+        return "no roots"s;
     }
 
     std::string operator()(const std::string& s) {

@@ -30,10 +30,10 @@ class InputGarbageError : std::domain_error {
     std::string coefficients_;
 };
 
-// a queue for equation's coefficients produced from the input
 using Queue = std::queue<std::tuple<std::string, std::string, std::string>>;
 using PrintResult = std::variant<InputGarbageError, EquationResult>;
 
+// helper for passing variables for concurrency needs inside one convenient structure
 struct ThreadHelper {
     ThreadHelper() = default;
     ThreadHelper(const ThreadHelper&) = delete;

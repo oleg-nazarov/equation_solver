@@ -21,6 +21,8 @@ void CheckCoeffsForGarbage(const std::string& a, const std::string& b, const std
     }
 }
 
+// as we get equation coefficients as treys, we want to print them as treys too,
+// even if it is a linear equation ("0 4 -4")
 std::vector<int> GetTreyCoefficients(const std::shared_ptr<OneVariableEquation>& equation_ptr) {
     if (dynamic_cast<Linear*>(equation_ptr.get())) {
         std::vector<int> new_coeffs{0};
@@ -40,14 +42,9 @@ void CalculateAndWriteRootsAndExtremum(std::promise<PrintResult> result_promise,
     EquationResult equation_res;
 
     // 1. add coefficients
-
-    // as we get equation coefficients as treys, we want to print them as treys too,
-    // even if it is a linear equation ("0 4 -4")
     equation_res.coeffs = GetTreyCoefficients(equation_ptr);
-
     // 2. calculating roots
     equation_res.roots = equation_ptr->GetRoots();
-
     // 3. finding extremum
     equation_res.extremum = extremum_ptr->GetExtremum();
 
@@ -95,9 +92,8 @@ void FindRootsAndExtremum(std::vector<std::future<PrintResult>>& print_results, 
     auto& m_queue = thread_helper.GetMutexQueue();
     auto& cv_queue = thread_helper.GetCVQueue();
 
-    std::shared_ptr<OneVariableEquation> equation_ptr;
-    std::shared_ptr<ExtremumSolver> extremum_ptr;
-
+    // we either know that the input is still not empty and new coefficients will be pushed
+    // into the Queue, or they are already there
     while (!(thread_helper.IsInputEmpty() && coefficients.empty())) {
         std::promise<PrintResult> new_result_promise;
         std::tuple<std::string, std::string, std::string> coeffs;
@@ -105,11 +101,12 @@ void FindRootsAndExtremum(std::vector<std::future<PrintResult>>& print_results, 
         {
             std::unique_lock lk(m_queue);
 
+            // wait because the input is still full but the queue is empty yet
             cv_queue.wait(lk, [&coefficients]() {
                 return !coefficients.empty();
             });
 
-            // push future-object to read later from it an equation roots and extremum
+            // push future-object to read equation roots and extremum from it later
             print_results.push_back(std::move(new_result_promise.get_future()));
 
             coeffs = std::move(coefficients.front());
@@ -130,6 +127,9 @@ void FindRootsAndExtremum(std::vector<std::future<PrintResult>>& print_results, 
         }
 
         // create equation and extremum_solver
+        std::shared_ptr<OneVariableEquation> equation_ptr;
+        std::shared_ptr<ExtremumSolver> extremum_ptr;
+
         int a = std::stoi(a_s);
         int b = std::stoi(b_s);
         int c = std::stoi(c_s);

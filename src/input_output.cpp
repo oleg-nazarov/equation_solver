@@ -50,7 +50,9 @@ void ReadTreyAndProduceCoefficients(int argc, char** argv, Queue& coefficients,
 
 void PrintRootsAndExtremum(std::ostream& out, std::vector<std::future<PrintResult>>& print_results,
                            ThreadHelper& thread_helper) {
-    // wait untill reading all arguments and putting in all future-objects
+    using namespace std::literals::string_literals;
+
+    // wait until reading the whole input to not modify "print_results" anymore
     thread_helper.GetSemPrint().acquire();
 
     for (size_t i = 0; i < print_results.size(); ++i) {
@@ -58,11 +60,11 @@ void PrintRootsAndExtremum(std::ostream& out, std::vector<std::future<PrintResul
 
         if (const InputGarbageError* err = std::get_if<InputGarbageError>(&result)) {
             out << '(' << err->GetCoefficients() << ')';
-            out << " => ";
+            out << " => "s;
             out << err->what();
         } else if (const EquationResult* eq_res = std::get_if<EquationResult>(&result)) {
             detail::PrintCoeffs(out, eq_res->coeffs);
-            out << " => ";
+            out << " => "s;
             out << eq_res->roots << ' ' << eq_res->extremum;
         }
 
